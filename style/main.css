@@ -1,0 +1,121 @@
+.crossword {
+/*    border: 1px solid #000;
+    border-collapse: collapse;
+    counter-reset: req;*/
+    background-color: #000;
+    border-collapse: separate;
+    border-left: 1px solid #000;
+    border-spacing: 0;
+    border-top: 1px solid #000;
+    counter-reset: req;
+    empty-cells: hide;
+}
+.crossword caption h1 {
+    display: inline;
+    font-size: 2em;
+    margin: 0;
+    padding: 0;
+}
+.crossword caption h2 {
+    display: inline;
+    font-size: 1em;
+    font-style: italic;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+.crossword td {
+/*    background-color: #000;
+    border: 1px solid #000;
+    height: 30px;
+    padding: 6px;
+    text-align:left;
+    vertical-align:top;
+    width: 30px;*/
+    background-color: #FFF;
+    border-bottom: 1px solid #000;
+    border-right: 1px solid #000;
+    height: 30px;
+    padding: 6px;
+    text-align: left;
+    vertical-align: top;
+    width: 30px;
+}
+/*.err:after {
+    content: "!";
+    color: #000;
+    font-size: 10px;
+    font-weight: bold;
+    margin: 23px -5px 0 0;
+    position: absolute;
+}*/
+.crossword td[id], .crossword td[data-hor], .crossword td[data-ver] {
+/*    background-color: #FFF;*/
+}
+.crossword td.sel {
+    background-color: #FF9;
+}
+.crossword td.err {
+    background-color: #F00;
+}
+.crossword td[id] {
+    counter-increment: req;
+}
+.crossword td[id]:before {
+    content: counter(req);
+    font-size: 10px;
+    margin: -5px;
+    position: absolute;
+}
+.crossword td input {
+    background-color: transparent;
+    border: 0 none;
+    font-size: 15px;
+    height: 100%;
+    padding: 0;
+    text-align: center;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+#definitions {
+    background-color: #CCC;
+    float: left;
+    width: 400px;
+}
+#definitions .pointer li {
+    cursor: pointer;
+}
+#definitions .pointer li:hover {
+    background-color: #069;
+}
+
+#tooltip {
+    background-color: #0FF;
+    border: 2px solid #00F;
+    color: #000;
+/*    cursor: move;*/
+    display:none;
+    opacity: 0.7;
+    padding: 5px;
+    position: absolute;
+    width: 200px;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
+    border-radius: 15px;
+}
+
+
+#create:after {
+    clear: both;
+    content: " ";
+    display: block;
+    font-size: 0;
+    height: 0;
+    visibility: hidden;
+}
+#create fieldset {
+    float: left;
+    margin: 0;
+    padding: 0;
+}
