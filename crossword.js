@@ -205,10 +205,11 @@ $.fn.crossword = function(options) {
 
 
         // for chrome and safari click event
-        _$input.live("mouseup", function() {
-            return false;
-        });
-
+        if (_$input.live) {
+            _$input.live("mouseup", function() {
+                return false;
+            });
+        }
 
         // input keydown
         _$input.bind("keydown", function(event) {
