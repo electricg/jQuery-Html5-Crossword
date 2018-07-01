@@ -1,0 +1,465 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>Cruciverba 1.0</title>
+	<script type="text/javascript" src="jquery-1.4.2.js"></script>
+	<style type="text/css" media="screen">
+#crossword {
+    border: 1px solid #000;
+    border-collapse: collapse;
+    counter-reset: req;
+}
+#crossword td {
+    background-color: #000;
+    border: 1px solid #000;
+    height: 30px;
+    padding: 6px;
+    text-align:left;
+    vertical-align:top;
+    width: 30px;
+}
+#crossword td[id].sel, #crossword td[headers].sel {
+    background-color: #FF9;
+}
+#crossword td[id].err, #crossword td[headers].err {
+    background-color: #F00;
+}
+#crossword td[id], #crossword td[headers] {
+    background-color: #FFF;
+}
+#crossword td[id] {
+    counter-increment: req;
+}
+#crossword td[id]:before {
+/*    content: attr(id);*/
+    content: counter(req);
+    font-size: 10px;
+    margin: -5px;
+    position: absolute;
+}
+#crossword td input {
+    background-color: transparent;
+    border: 0 none;
+    font-size: 15px;
+    height: 100%;
+    padding: 0;
+    text-align: center;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+#definitions .pointer li {
+    cursor: pointer;
+}
+
+#tooltip {
+    background-color: #0FF;
+    border: 2px solid #00F;
+    color: #000;
+    display:none;
+    opacity: 0.7;
+    padding: 5px;
+    position: absolute;
+    width: auto;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
+    border-radius: 15px;
+}
+
+
+#create:after {
+    clear: both;
+    content: " ";
+    display: block;
+    font-size: 0;
+    height: 0;
+    visibility: hidden;
+}
+#create fieldset {
+    float: left;
+    margin: 0;
+    padding: 0;
+}
+	</style>
+</head>
+<body>
+<h1>Crossword 1.0</h1>
+<input type="button" id="check" value="check" />
+<div id="definitions"></div>
+
+<script type="text/javascript">//<![CDATA[
+
+(function($) {
+// plugin definition
+$.fn.crossword = function(options) {
+    var defaults = {
+        td_sel          : "sel",
+        hor_id          : "hor",
+        ver_id          : "ver",
+        tooltip_id      : "tooltip",
+        prefix_id       : "d"
+    };
+    // system variables
+    var _hor = "hor",
+        _ver = "ver",
+        _key_l = 37,
+        _key_u = 38,
+        _key_r = 39,
+        _key_d = 40,
+        _rspace = /\s+/,
+        D = "#",
+        version = "1.0";
+    // extend default options with those provided
+    var opts = $.extend(defaults, options);
+    
+    // Our plugin implementation code goes here.    
+    return this.each(function(){
+        
+        var $table = $(this),
+            $tbody = $table.find("tbody"),
+            $defs = $(D + opts.hor_id + "," + D +  opts.ver_id),
+            $tooltip = $("<div id='" + opts.tooltip_id + "'></div>"),
+            _$input = $tbody.find("input"),
+            _$td = $tbody.find("td");
+        
+        $defs.addClass("pointer");
+    
+        // definitions click
+        $defs.bind("click", function(event) {
+            var el = event.target,
+                $elem = $(el),
+                $ul = $(this),
+                $span, $li, $tr,
+                dir, number, id, col = "",
+                position;
+            if (el.nodeName === "UL") {
+                return false;
+            }
+            else if (el.nodeName === "LI") {
+                $li = $elem;
+            }
+            else {
+                $li = $elem.closest("li");
+            }
+            $span = $li.children("span").eq(0);
+            dir = ($ul.attr("id") == opts.hor_id) ? _hor : _ver;
+            number = parseInt($span.text());
+            //selectWord(number, dir);
+            var $first = $(D + opts.prefix_id + number),
+                $tr = $first.closest("tr"),
+                col = "";
+            if (dir == _ver) {
+                var i = $tr.children().index($first) + 1;
+                col = ":nth-child(" + i + ")";
+            }
+            _$td.removeClass(opts.td_sel);
+            $.each([
+                $first,
+                $("td[headers~='" + opts.prefix_id + number + "']" + col, col ? $tbody : $tr)
+                ], function() {
+                this.addClass(opts.td_sel);
+            });
+
+            
+            //$first.find("input").focus();
+        
+            //TODO
+            position = $first.position();
+            $tooltip.html($li.html());
+            $tooltip.css("left", position.left + 40);
+            $tooltip.css("top", position.top - 40);
+            $tooltip.css("display", "block");
+            // $tooltip.animate({
+            //            display: "block" 
+            //         }, 1500);
+            $table.after($tooltip);
+            
+            
+            // animated automatic scroll to the tooltip
+            var offset = $tooltip.offset().top;
+            $("html").animate({scrollTop: offset + "px"});
+        });
+    
+    
+        // cell click
+        $tbody.bind("click", function(event) {
+            var el = event.target,
+                $elem = $(el);
+            if (el.nodeName === "TD") {
+                var $input = $elem.find("input");
+                if ($input.length) {
+                    $input.focus();
+                }
+            }
+        });
+    
+    
+        // input blur
+        _$input.bind("blur", function() {
+            _$td.removeClass(opts.td_sel);
+            $tooltip.css("display", "");
+        });
+
+
+        // input click focus
+        _$input.bind("click focus", function() { 
+            // Select all contents of input
+            $(this).select();
+        });
+
+
+        // for chrome and safari click event
+        _$input.live("mouseup", function() {
+            return false;
+        });
+
+
+        // input focus
+        _$input.bind("focus", function() {
+            var $input = $(this),
+                $td = $input.closest("td"),
+                id = $td.attr("id"),
+                $tr = $td.closest("tr"),
+                ids = [],
+                headers = $td.attr("headers");
+            if (headers) {
+    			ids = headers.split(_rspace);
+    		}
+    		if (id) {
+    		    ids.push(id);
+    		}
+            var i = $tr.children().index($td) + 1,
+                col = ":nth-child(" + i + ")";
+            _$td.removeClass(opts.td_sel);
+            // seleziono le celle compagne di quella selezionata
+            $.each([
+                $(D + ids[0]),
+                $(D + ids[1]),
+                $tr.find("td[headers~='" + ids[0] + "'], td[headers~='" + ids[1] + "']"),
+                _$td.filter("[headers~='" + ids[0] + "']" + col + ", [headers~='" + ids[1] + "']" + col),
+                ], function() {
+                this.addClass(opts.td_sel);
+            });
+        });
+    
+    
+        // input keydown
+        _$input.bind("keydown", function(event) {
+            var key = event.which,
+                $input = $(this),
+                $td = $input.closest("td"),
+                $tr = $input.closest("tr"),
+                $next,
+                $tbody_child = $tbody.children("tr"),
+                $tr_child = $tr.children(),
+                new_tr_i = $tbody_child.index($tr),
+                new_td_i = $tr_child.index($td),
+                last_tr = $tbody_child.length;
+                last_td = $tr_child.length;
+            do {
+                // order of new_tr_i and new_td_i allocations is important
+                switch (key) {
+                    case _key_u:
+                        new_tr_i = modMinus(new_tr_i, 1, last_tr);
+                        new_td_i = modMinus(new_td_i, parseInt(new_tr_i / (last_tr-1)), last_td);
+                        break;
+                    case _key_r:
+                        new_tr_i = modPlus(new_tr_i, parseInt(new_td_i / (last_td-1)), last_tr);
+                        new_td_i = modPlus(new_td_i, 1, last_td);
+                        break;
+                    case _key_d:
+                        new_td_i = modPlus(new_td_i, parseInt(new_tr_i / (last_tr-1)), last_td);
+                        new_tr_i = modPlus(new_tr_i, 1, last_tr);
+                        break;
+                    case _key_l:
+                        new_td_i = modMinus(new_td_i, 1, last_td);
+                        new_tr_i = modMinus(new_tr_i, parseInt(new_td_i / (last_td-1)), last_tr);
+                        break;
+                    default:
+                        break;
+                }
+                $next = $tbody_child.eq(new_tr_i).children("td" ).eq(new_td_i).find("input");
+            } while ($next.length == 0);
+            $next.focus();
+        });
+    
+    
+    });
+};
+// end plugin definition
+
+
+
+// plugin definition
+$.fn.crosswordCreate = function(options) {
+    var defaults = {
+        crossword_id        : "crossword",
+        definitions_id      : "definitions",
+        hor_id              : "hor",
+        ver_id              : "ver",
+        bb                  : "#", //blackblock, NOT the id simbol !!
+        crossword_val       : "",
+        hor_val             : "",
+        ver_val             : "",
+        prefix_id           : "d"
+    };
+    // system variables
+    var _hor = "hor",
+        _ver = "ver",
+        _rspace = /\s+/,
+        _rreturn = /[\r\n]/g,
+        _rsspace = /[ \t]+/g,
+        D = "#",
+        version = "1.0";
+    // extend default options with those provided
+    var opts = $.extend(defaults, options);
+    
+    // Our plugin implementation code goes here.
+    
+    // schema
+    var hor = [], ver = [],
+        c = 0,
+        letters,
+        schema = "<table id='" + opts.crossword_id + "'><tbody>",
+        rows = $.trim(opts.crossword_val).split(_rspace),
+        rows_l = rows.length,
+        cols_l = rows[0].length;
+    for (h=0; h<cols_l; h++)
+        ver[h] = 0; //posso scrivere
+    $.each(rows, function(h, row) {
+        if (typeof row === "string" && row != "") {
+            hor[h] = 0; //posso scrivere
+            schema += "<tr>";
+            letters = row.split("");
+            $.each(letters, function(v, letter) {
+                if (letter == opts.bb) {
+                    ver[v] = hor[h] = 0;
+                    schema += "<td></td>";
+                }
+                else {
+                    schema += "<td";
+                    if (ver[v] || hor[h]) {
+                        h1 = hor[h] ? (opts.prefix_id+hor[h]) : "";
+                        h2 = ver[v] ? (opts.prefix_id+ver[v]) : "";
+                        schema += " headers='" + (h1 + " " + h2).trim() + "'";
+                    }
+                    // posso scrivere && non sono sul bordo && non e' una parola di una sola lettera
+                    if ((!hor[h] && (v+1)<cols_l && rows[h][v+1]!=opts.bb) ||
+                        (!ver[v] && (h+1)<rows_l && rows[h+1][v]!=opts.bb)) {
+                        schema += " id='" + opts.prefix_id + (++c) + "'";
+                        hor[h] = hor[h] || c;
+                        ver[v] = ver[v] || c;
+                    }
+                    schema += "><input type='text' maxlength='1' value=' ' /></td>";
+                }
+            });
+            schema += "</tr>";
+        }
+    });
+    schema += "</tbody></table>";
+    
+    // definitions
+    var strings = [opts.hor_val, opts.ver_val],
+        ids = [opts.hor_id, opts.ver_id],
+        number = 0,
+        defs = [];
+    $.each(strings, function(i, val) {
+        rows = val.trim().replace(_rsspace, " ").split(_rreturn);
+        defs[i] = "<ul id='" + ids[i] + "'>";
+        $.each(rows, function(k, row) {
+            row = row.trim();
+            if (row != "") {
+                number = parseInt(row);
+                defs[i] += "<li><span>" + number + "</span> " + row.replace(number, "").trim() + "</li>";
+            }
+        });
+        defs[i] += "</ul>";
+    });
+        
+    $(D + opts.definitions_id).append(defs.join("")).before(schema);
+    
+    return this;
+};
+// end plugin definition
+
+
+
+// plugin definition
+$.fn.crosswordCheck = function(options) {
+    var defaults = {
+        crossword_id        : "crossword",
+        solution        : "",
+        td_err              : "err",
+        bb                  : "#", //blackblock, NOT the id simbol !!
+        crossword_val       : "",
+        hor_val             : "",
+    };
+    // system variables
+    var _rspace = /\s+/,
+        _rreturn = /[\r\n]/g,
+        D = "#",
+        version = "1.0";
+    // extend default options with those provided
+    var opts = $.extend(defaults, options);
+    
+    // Our plugin implementation code goes here.
+    var solution = $.trim(opts.solution).replace(_rspace, "").replace(_rreturn, "").toUpperCase(),
+        griglia = "",
+        $cell = $(D + opts.crossword_id + " td");
+    $.each($cell, function() {
+        griglia += $(this).find("input").val() || opts.bb;
+    });
+    griglia = griglia.toUpperCase();
+    $cell.removeClass(opts.td_err);
+    $.each(solution.split(""), function(i, letter) {
+        if (letter != griglia[i])
+            $cell.eq(i).addClass(opts.td_err);
+    });
+    return this;
+};
+// end plugin definition
+
+
+
+// http://users.wpi.edu/~martin/mod.html
+function mod(a, b) {
+    if (b <= 0)
+        return(-1);
+    else
+        return( ((a % b) + b) % b );
+}
+function modPlus(a, b, m) { // Add a and b modulo m
+    return( mod( (a % m) + (b % m), m) );
+}
+function modMinus(a, b, m) { // Subtract b from a modulo m
+    return( mod( (a % m) - (b % m), m) );
+}
+
+
+})(jQuery);
+
+$.get("cruciverba-1.0.source.html", function(response) { 
+    
+    $resp = $(response);
+    var cw = $resp.find("#create_crossword").val(),
+        hor = $resp.find("#create_hor").val(),
+        ver = $resp.find("#create_ver").val();
+
+    $.fn.crosswordCreate({
+        crossword_val: cw,
+        hor_val: hor,
+        ver_val: ver
+    });
+
+    $("#crossword").crossword();
+    
+    $("#check").click(function() {
+        $.fn.crosswordCheck({solution: cw});
+    });
+
+});
+//]]></script>
+</body>
+</html>
